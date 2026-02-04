@@ -68,3 +68,32 @@ void ShowAll(struct Node *walk) {
     }
     printf("\n");
 }
+
+// --- งานของคนที่ 3 (แปลงข้อความ) ---
+void ParseInput(char *input, struct Node **start) {
+    char numStr[20];
+    int j = 0;
+    int len = strlen(input);
+
+    for (int i = 0; i < len; i++) {
+        // เช็คว่าเป็นตัวเลข 0-9 หรือจุดทศนิยม
+        if ((input[i] >= '0' && input[i] <= '9') || input[i] == '.') {
+            numStr[j++] = input[i];
+            numStr[j] = '\0';
+        } 
+        else {
+            // เจอเครื่องหมายคำนวณ ให้เก็บตัวเลขก่อนหน้าลง List
+            double val;
+            sscanf(numStr, "%lf", &val);
+            AddNode(start, val, input[i]); // เรียกใช้ของคนที่ 2
+            j = 0;
+        }
+    }
+
+    // เก็บตัวเลขก้อนสุดท้าย (ที่ไม่มีเครื่องหมายต่อท้าย)
+    if (j > 0) {
+        double val;
+        sscanf(numStr, "%lf", &val);
+        AddNode(start, val, '=');
+    }
+}
