@@ -9,7 +9,7 @@ struct Node {
     struct Node *back;
 };
 
-// 2. ประกาศชื่อฟังก์ชันไว้ (เพื่อให้เพื่อนคนอื่นเขียนไส้ในต่อได้
+// 2. ประกาศชื่อฟังก์ชันไว้ (เพื่อให้เพื่อนคนอื่นเขียนไส้ในต่อได้)
 void ShowAll(struct Node *walk);                    // งานคนทื่ 2
 void ParseInput(char *input, struct Node **start);  // งานคนที่ 3
 void SolveLogic(struct Node **start);               // งานคนที่ 4

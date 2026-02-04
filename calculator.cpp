@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// 1. ประกาศโครงสร้างข้อมูล (เพื่อนทุกคนต้องใช้ตัวนี้)
+// --- [ส่วนของคนที่ 1] ประกาศโครงสร้างและหัวฟังก์ชัน ---
 struct Node {
     double data;
     char op;
@@ -9,62 +9,135 @@ struct Node {
     struct Node *back;
 };
 
-// 2. ประกาศชื่อฟังก์ชันไว้ (เพื่อให้เพื่อนคนอื่นเขียนไส้ในต่อได้)
-void AddNode(struct Node **walk, double d, char o); // งานคนทื่ 2
-void ShowAll(struct Node *walk);                    // งานคนทื่ 2
-void ParseInput(char *input, struct Node **start);  // งานคนที่ 3
-void SolveLogic(struct Node **start);               // งานคนที่ 4
+void AddNode(struct Node **walk, double d, char o);
+void ShowAll(struct Node *walk);
+void ParseInput(char *input, struct Node **start);
+void SolveLogic(struct Node **start);
+void DelNode(struct Node *now);
 
-// 3. เขียน Main Function
+// --- [ส่วนของคนที่ 1] Main ---
 int main() {
     struct Node *start = NULL;
     char input[100];
 
-    printf("--- Group Calculator Project ---\n");
+    printf("--- Calculator (No ctype/stdlib) ---\n");
     printf("Input Expression: ");
     scanf("%s", input);
 
-    // เรียกใช้งานฟังก์ชันของเพื่อนๆ
-    // (ตอนนี้มันจะยังทำงานไม่ได้จนกว่าเพื่อนจะเขียนเสร็จ แต่เราวางโครงไว้ก่อน)
-    ParseInput(input, &start);   // เรียกคนที่ 3
-    
-    printf("\n[Initial List]: ");
-    ShowAll(start);              // เรียกคนที่ 2
+    ParseInput(input, &start);
 
-    SolveLogic(&start);          // เรียกคนที่ 4
+    printf("\n[Initial List]: ");
+    ShowAll(start);
+
+    SolveLogic(&start);
 
     return 0;
 }
 
+// --- [ส่วนของคนที่ 2] Linked List Manager ---
 void AddNode(struct Node **walk, double d, char o) {
     struct Node *temp = NULL;
-
-    // 1. วนลูปหาตัวสุดท้าย (ตัวที่ next เป็น NULL)
     while (*walk != NULL) {
-        temp = *walk;          // เก็บตัวก่อนหน้าไว้เชื่อมขา back
-        walk = &(*walk)->next; // ขยับไปชี้ที่ next ของตัวถัดไป
+        temp = *walk;
+        walk = &(*walk)->next;
     }
-
-    // 2. จองพื้นที่สร้างโหนดใหม่
-    *walk = new struct Node;
+    *walk = new struct Node; // ใช้ new ของ C++ ไม่ต้องพึ่ง stdlib
     (*walk)->data = d;
     (*walk)->op = o;
-    (*walk)->next = NULL;      // ตัวสุดท้ายต้องชี้ไป NULL
-    (*walk)->back = temp;      // เชื่อมขากลับไปหาตัวก่อนหน้า
+    (*walk)->next = NULL;
+    (*walk)->back = temp;
 }
 
-// ฟังก์ชันแสดงผลข้อมูลทั้งหมดใน List
 void ShowAll(struct Node *walk) {
     while (walk != NULL) {
-        // ถ้าเป็นตัวจบ (=) ให้แสดงแค่ตัวเลข
-        if (walk->op == '=') {
-            printf("%.2f", walk->data);
-        } 
-        // ถ้าเป็นตัวทั่วไป ให้แสดงเลขพร้อมเครื่องหมาย
-        else {
+        if (walk->op != '=')
             printf("%.2f %c ", walk->data, walk->op);
-        }
-        walk = walk->next; // ขยับไปตัวถัดไป
+        else
+            printf("%.2f", walk->data);
+        walk = walk->next;
     }
     printf("\n");
+}
+
+// --- [ส่วนของคนที่ 3] Input Parser (จุดที่แก้เยอะสุด) ---
+void ParseInput(char *input, struct Node **start) {
+    char numStr[20];
+    int j = 0;
+    int len = strlen(input);
+
+    for (int i = 0; i < len; i++) {
+        // 1. แก้ isdigit -> เช็ค ASCII เอง
+        // ถ้าเป็นตัวเลข (0-9) หรือ จุดทศนิยม (.)
+        if ((input[i] >= '0' && input[i] <= '9') || input[i] == '.') {
+            numStr[j++] = input[i];
+            numStr[j] = '\0';
+        } 
+        else {
+            // 2. แก้ atof -> ใช้ sscanf แทน
+            double val;
+            sscanf(numStr, "%lf", &val); 
+            
+            AddNode(start, val, input[i]);
+            j = 0;
+        }
+    }
+    
+    if (j > 0) {
+        double val;
+        sscanf(numStr, "%lf", &val); // แปลงเลขก้อนสุดท้าย
+        AddNode(start, val, '=');
+    }
+}
+
+// --- [ส่วนของคนที่ 4] Logic Solver ---
+void DelNode(struct Node *now) {
+    struct Node *del = now->next;
+    now->next = del->next;
+    if (del->next != NULL) del->next->back = now;
+    now->op = del->op;
+    delete del; // delete เป็นคำสั่ง C++ ไม่ต้องใช้ stdlib
+}
+
+void SolveLogic(struct Node **start) {
+    struct Node *walk;
+    printf("\n--- Calculation Process ---\n");
+
+    // Loop 1: * / %
+    walk = *start;
+    while (walk != NULL && walk->next != NULL) {
+        char o = walk->op;
+        if (o == '*' || o == '/' || o == '%') {
+            double val1 = walk->data;
+            double val2 = walk->next->data;
+
+            if (o == '*') walk->data = val1 * val2;
+            else if (o == '/') walk->data = val1 / val2;
+            else if (o == '%') walk->data = (int)val1 % (int)val2;
+
+            DelNode(walk);
+            printf("Step: "); ShowAll(*start);
+        } else {
+            walk = walk->next;
+        }
+    }
+
+    // Loop 2: + -
+    walk = *start;
+    while (walk != NULL && walk->next != NULL) {
+        char o = walk->op;
+        if (o == '+' || o == '-') {
+            double val1 = walk->data;
+            double val2 = walk->next->data;
+
+            if (o == '+') walk->data = val1 + val2;
+            else if (o == '-') walk->data = val1 - val2;
+
+            DelNode(walk);
+            printf("Step: "); ShowAll(*start);
+        } else {
+            walk = walk->next;
+        }
+    }
+    printf("------------------------\n");
+    printf("Final Answer = %.2f\n", (*start)->data);
 }
