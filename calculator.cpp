@@ -97,3 +97,58 @@ void ParseInput(char *input, struct Node **start) {
         AddNode(start, val, '=');
     }
 }
+
+// --- งานของคนที่ 4 (คำนวณเลขและยุบโหนด) ---
+void DelNode(struct Node *now) {
+    struct Node *del = now->next; // ตัวที่จะลบคือตัวถัดไป (ตัวขวามือ)
+    now->next = del->next;        // ข้ามหัวตัวที่จะลบ ไปชี้ตัวถัดไปอีกที
+    if (del->next != NULL) {
+        del->next->back = now;    // ให้ตัวนู้นชี้กลับมาหาเรา
+    }
+    now->op = del->op;            // ขโมยเครื่องหมายของตัวที่โดนลบมาใส่ตัวเรา
+    delete del;                   // ลบตัวนั้นทิ้งออกจากหน่วยความจำ
+}
+
+void SolveLogic(struct Node **start) {
+    struct Node *walk;
+    printf("\n--- Calculation Process ---\n");
+
+    // Loop 1: จัดการ คูณ หาร หารเอาเศษ (*, /, %) ก่อน
+    walk = *start;
+    while (walk != NULL && walk->next != NULL) {
+        char o = walk->op;
+        if (o == '*' || o == '/' || o == '%') {
+            double v1 = walk->data;
+            double v2 = walk->next->data;
+            
+            if (o == '*') walk->data = v1 * v2;
+            else if (o == '/') walk->data = v1 / v2;
+            else if (o == '%') walk->data = (int)v1 % (int)v2;
+
+            DelNode(walk); // ยุบโหนดหลังคำนวณเสร็จ
+            printf("Step: "); ShowAll(*start); // โชว์สเต็ปการคิด
+        } else {
+            walk = walk->next;
+        }
+    }
+
+    // Loop 2: จัดการ บวก ลบ (+, -) ทีหลัง
+    walk = *start;
+    while (walk != NULL && walk->next != NULL) {
+        char o = walk->op;
+        if (o == '+' || o == '-') {
+            double v1 = walk->data;
+            double v2 = walk->next->data;
+            
+            if (o == '+') walk->data = v1 + v2;
+            else if (o == '-') walk->data = v1 - v2;
+
+            DelNode(walk);
+            printf("Step: "); ShowAll(*start);
+        } else {
+            walk = walk->next;
+        }
+    }
+    printf("------------------------\n");
+    printf("Final Answer = %.2f\n", (*start)->data);
+}
