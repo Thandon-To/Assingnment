@@ -35,3 +35,36 @@ int main() {
 
     return 0;
 }
+
+void AddNode(struct Node **walk, double d, char o) {
+    struct Node *temp = NULL;
+
+    // 1. วนลูปหาตัวสุดท้าย (ตัวที่ next เป็น NULL)
+    while (*walk != NULL) {
+        temp = *walk;          // เก็บตัวก่อนหน้าไว้เชื่อมขา back
+        walk = &(*walk)->next; // ขยับไปชี้ที่ next ของตัวถัดไป
+    }
+
+    // 2. จองพื้นที่สร้างโหนดใหม่
+    *walk = new struct Node;
+    (*walk)->data = d;
+    (*walk)->op = o;
+    (*walk)->next = NULL;      // ตัวสุดท้ายต้องชี้ไป NULL
+    (*walk)->back = temp;      // เชื่อมขากลับไปหาตัวก่อนหน้า
+}
+
+// ฟังก์ชันแสดงผลข้อมูลทั้งหมดใน List
+void ShowAll(struct Node *walk) {
+    while (walk != NULL) {
+        // ถ้าเป็นตัวจบ (=) ให้แสดงแค่ตัวเลข
+        if (walk->op == '=') {
+            printf("%.2f", walk->data);
+        } 
+        // ถ้าเป็นตัวทั่วไป ให้แสดงเลขพร้อมเครื่องหมาย
+        else {
+            printf("%.2f %c ", walk->data, walk->op);
+        }
+        walk = walk->next; // ขยับไปตัวถัดไป
+    }
+    printf("\n");
+}
