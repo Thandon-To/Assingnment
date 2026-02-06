@@ -3,8 +3,6 @@
 
 // --- [ส่วนของคนที่ 1] ประกาศโครงสร้างและหัวฟังก์ชัน ---
 struct Node {
-    double data;
-    char op;
     struct Node *next;
     struct Node *back;
 };
